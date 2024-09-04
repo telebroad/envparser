@@ -1,4 +1,4 @@
-package flag_env_to_struct
+package envparser
 
 import (
 	"flag"

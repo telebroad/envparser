@@ -1,3 +1,3 @@
-module github.com/telebroad/flag-env-to-struct
+module github.com/telebroad/envparser
 
 go 1.23.0
