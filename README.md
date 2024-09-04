@@ -1,2 +1,2 @@
-# flag-env-to-struct
+# envparser
 taking a struct into a flag and parse it or environment 
