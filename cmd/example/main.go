@@ -55,10 +55,11 @@ func setUpEnvTest(log *slog.Logger) {
 }
 
 func main() {
-	log := slog.New(slog.NewTextHandler(os.Stdout, nil))
+	logOpt := &slog.HandlerOptions{AddSource: true, Level: slog.LevelDebug}
+	log := slog.New(slog.NewTextHandler(os.Stdout, logOpt))
 	slog.SetDefault(log)
+	envparser.SetLogger(log)
 	defer log.Info("exiting")
 	setUpFlagsTest(log)
 	setUpEnvTest(log)
-
 }
