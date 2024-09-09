@@ -22,20 +22,9 @@ type State struct {
 	EnvFile    string `json:"envFile" flag:"env-file, default:.env,usage:to change the default env file to load" env:"-"`
 }
 
-func setUpFlagsTest(log *slog.Logger) {
-	log = log.With("test", "setUpFlagsTest")
-	state := State{}
-	err := envparser.SetUpFlags(".", &state)
-	if err != nil {
-		log.Error("SetUpFlags returned an error", "error", err)
-	}
-
-	log.Debug("state", "state", state)
-}
-
 func setUpEnvTest(log *slog.Logger) {
 
-	log = log.With("test", "setUpEnvTest")
+	log = log.With("test", "SetUpFlagEnv")
 	os.Setenv("CUSTOMER_ID", "1")
 	os.Setenv("START", "2")
 	os.Setenv("END", "3")
@@ -46,13 +35,11 @@ func setUpEnvTest(log *slog.Logger) {
 	os.Setenv("LOG_DB.CONN_MAX_LIFE_TIME", "4")
 
 	state := State{}
-	err := envparser.SetUpEnv(".", &state)
+	err := envparser.SetUpFlagEnv(".", &state)
 	if err != nil {
 		log.Error("SetUpEnv returned an error", "error", err)
 	}
-
 	log.Debug("state", "state", state)
-
 }
 
 func main() {
@@ -61,6 +48,5 @@ func main() {
 	slog.SetDefault(log)
 	envparser.SetLogger(log)
 	defer log.Info("exiting")
-	setUpFlagsTest(log)
 	setUpEnvTest(log)
 }

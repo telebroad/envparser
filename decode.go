@@ -88,7 +88,8 @@ func setUpFlags(prefix, env, splitter string, p any) error {
 				return fmt.Errorf("error: unsupported tag %q for field %q\n", s, field.Name)
 			}
 		}
-		suppertedTypes := []string{"string", "int", "int64", "uint", "uint64", "bool", "struct"}
+
+		supportedTypes := []string{"string", "int", "int64", "uint", "uint64", "bool", "struct"}
 		log = log.With("flag-usage", flagUsage, "flag-default", flagDefaultValue)
 
 		if fieldsEnv != "" && fieldsEnv != "-" {
@@ -101,8 +102,13 @@ func setUpFlags(prefix, env, splitter string, p any) error {
 		filedType := field.Type.Kind()
 		var err error
 		switch filedType {
+
 		case reflect.String:
-			flag.StringVar(value.(*string), flagKey, flagDefaultValue, flagUsage)
+			tempValue := ""
+			flag.StringVar(&tempValue, flagKey, flagDefaultValue, flagUsage)
+			if tempValue != "" {
+				fieldInfo.SetString(tempValue)
+			}
 		case reflect.Int:
 			var i int
 			if flagDefaultValue != "" {
@@ -112,7 +118,11 @@ func setUpFlags(prefix, env, splitter string, p any) error {
 					return fmt.Errorf("error parsing default to type %q value for field %q: %s", filedType, field.Name, err)
 				}
 			}
-			flag.IntVar(value.(*int), flagKey, i, flagUsage)
+			var tempValue int
+			flag.IntVar(&tempValue, flagKey, i, flagUsage)
+			if tempValue != 0 {
+				fieldInfo.Set(reflect.ValueOf(tempValue))
+			}
 		case reflect.Int64:
 			var i int64
 
@@ -123,7 +133,11 @@ func setUpFlags(prefix, env, splitter string, p any) error {
 					return fmt.Errorf("error parsing default to type %q value for field %q: %s", filedType, field.Name, err)
 				}
 			}
-			flag.Int64Var(value.(*int64), flagKey, i, flagUsage)
+			var tempValue int64
+			flag.Int64Var(&tempValue, flagKey, i, flagUsage)
+			if tempValue != 0 {
+				fieldInfo.SetInt(tempValue)
+			}
 		case reflect.Uint:
 			var i uint
 			if flagDefaultValue != "" {
@@ -134,7 +148,11 @@ func setUpFlags(prefix, env, splitter string, p any) error {
 				}
 				i = uint(ii)
 			}
-			flag.UintVar(value.(*uint), flagKey, i, flagUsage)
+			var tempValue uint
+			flag.UintVar(&tempValue, flagKey, i, flagUsage)
+			if tempValue != 0 {
+				fieldInfo.Set(reflect.ValueOf(tempValue))
+			}
 		case reflect.Uint64:
 			var i uint64
 
@@ -145,7 +163,12 @@ func setUpFlags(prefix, env, splitter string, p any) error {
 					return fmt.Errorf("error parsing default to type %q value for field %q: %s", filedType, field.Name, err)
 				}
 			}
-			flag.Uint64Var(value.(*uint64), flagKey, i, flagUsage)
+			var tempValue uint64
+			flag.Uint64Var(&tempValue, flagKey, i, flagUsage)
+			if tempValue != 0 {
+				fieldInfo.SetUint(tempValue)
+			}
+
 		case reflect.Bool:
 			var b bool
 			if flagDefaultValue != "" {
@@ -155,8 +178,11 @@ func setUpFlags(prefix, env, splitter string, p any) error {
 					return fmt.Errorf("error parsing default to type %q value for field %q: %s", filedType, field.Name, err)
 				}
 			}
-
-			flag.BoolVar(value.(*bool), flagKey, b, flagUsage)
+			var tempValue bool
+			flag.BoolVar(&tempValue, flagKey, b, flagUsage)
+			if tempValue {
+				fieldInfo.SetBool(tempValue)
+			}
 		case reflect.Struct:
 			err = setUpFlags(flagKey, fieldsEnv, splitter, value)
 			if err != nil {
@@ -164,7 +190,7 @@ func setUpFlags(prefix, env, splitter string, p any) error {
 			}
 
 		default:
-			log.Warn("unsupported type", "supported types", suppertedTypes, "suggest", `"you can ignore it by flag:"-"`)
+			log.Warn("unsupported type", "supported types", supportedTypes, "suggest", `"you can ignore it by flag:"-"`)
 			continue
 		}
 
@@ -270,7 +296,7 @@ func setUpEnv(prefix, splitter string, p any) error {
 				log.Error("error parsing env to type", "error", err)
 				return fmt.Errorf("%s: %w", errorMessage, err)
 			}
-			fieldInfo.Set(reflect.ValueOf(i))
+			fieldInfo.SetInt(i)
 		case reflect.Uint:
 			i, err := strconv.ParseUint(envValue, 10, 64)
 			if err != nil {
@@ -298,14 +324,14 @@ func setUpEnv(prefix, splitter string, p any) error {
 				log.Error("error parsing env to type", "error", err)
 				return fmt.Errorf("%s: %w", errorMessage, err)
 			}
-			fieldInfo.Set(reflect.ValueOf(i))
+			fieldInfo.SetUint(i)
 		case reflect.Bool:
 			b, err := strconv.ParseBool(envValue)
 			if err != nil {
 				log.Error("error parsing env to type", "error", err)
 				return fmt.Errorf("%s: %w", errorMessage, err)
 			}
-			fieldInfo.Set(reflect.ValueOf(b))
+			fieldInfo.SetBool(b)
 		case reflect.Struct:
 
 			err := setUpEnv(fieldsEnv, splitter, value)
@@ -322,4 +348,22 @@ func setUpEnv(prefix, splitter string, p any) error {
 	}
 
 	return nil
+}
+
+// SetUpFlagEnv set up the flag and env for the given struct
+// first it will set up the flag, and then it will set up the env
+func SetUpFlagEnv(splitter string, p any) error {
+	err := SetUpEnv(splitter, p)
+	if err != nil {
+		log.Error("error setting up env", "error", err)
+		return err
+	}
+
+	err = SetUpFlags(splitter, p)
+	if err != nil {
+		log.Error("error setting up flag", "error", err)
+		return err
+	}
+
+	return err
 }
