@@ -314,7 +314,6 @@ func setUpEnv(prefix, splitter string, p any) error {
 				return err
 			}
 		default:
-
 			log.Warn("unsupported type", "suggest", `"you can ignore it by env:"-"`, "only supported type", supportedTypes)
 			continue
 		}
