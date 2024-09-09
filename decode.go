@@ -226,12 +226,16 @@ func setUpEnv(prefix, splitter string, p any) error {
 			"env-key", fieldsEnv,
 			"value", fmt.Sprintf("%+v", fieldInfo.Interface()),
 		)
+
 		if !fieldInfo.CanSet() {
 			log.Error("cannot set field")
 			return fmt.Errorf("cannot set field %v%v%s", prefix, splitter, field.Name)
 		}
+
+		fieldKind := field.Type.Kind()
 		envValue, hasValue := os.LookupEnv(fieldsEnv)
-		if !hasValue {
+
+		if !hasValue && fieldKind != reflect.Struct {
 			continue
 		}
 		errorMessage := fmt.Sprintf("error parsing env to type %q value for field %q: %s", field.Type.Kind(), field.Name, envValue)
@@ -303,7 +307,9 @@ func setUpEnv(prefix, splitter string, p any) error {
 			}
 			fieldInfo.Set(reflect.ValueOf(b))
 		case reflect.Struct:
+
 			err := setUpEnv(fieldsEnv, splitter, value)
+
 			if err != nil {
 				return err
 			}

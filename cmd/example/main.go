@@ -34,11 +34,12 @@ func setUpFlagsTest(log *slog.Logger) {
 }
 
 func setUpEnvTest(log *slog.Logger) {
+
 	log = log.With("test", "setUpEnvTest")
 	os.Setenv("CUSTOMER_ID", "1")
 	os.Setenv("START", "2")
 	os.Setenv("END", "3")
-	os.Setenv("LOG_DB.URI", "uri")
+	os.Setenv("LOG_DB.URI", "user:password@tcp(localhost:3306)/dbname?parseTime=true")
 	os.Setenv("LOG_DB.MAX_IDLE_CONNECTIONS", "1")
 	os.Setenv("LOG_DB.MAX_OPEN_CONNECTIONS", "2")
 	os.Setenv("LOG_DB.CONN_MAX_IDLE_TIME", "3")
